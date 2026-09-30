@@ -1,0 +1,18 @@
+# Xcode
+build/
+DerivedData/
+*.xcodeproj
+*.xcworkspace
+!default.xcworkspace
+xcuserdata/
+*.xccheckout
+*.moved-aside
+*.ipa
+Payload/
+
+# macOS
+.DS_Store
+
+# User-specific
+*.swp
+*~
