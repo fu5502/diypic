@@ -52,6 +52,7 @@ targets:
       - framework: CoreMedia.framework
       - framework: AVFoundation.framework
       - framework: Accelerate.framework
+      - framework: UserNotifications.framework
     entitlements:
       path: diypicBroadcast/diypicBroadcast.entitlements
       properties:

@@ -98,17 +98,25 @@ public final class StitchEngine {
 
     /// Saves an image to the iOS System Photo Library with authorization check
     public func saveToPhotos(image: UIImage) async throws {
-        let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
-        guard status == .authorized || status == .limited else {
+        var currentStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        if currentStatus == .notDetermined {
+            currentStatus = await PHPhotoLibrary.requestAuthorization(for: .readWrite)
+        }
+
+        guard currentStatus == .authorized || currentStatus == .limited else {
             throw NSError(
                 domain: "com.fu5502.diypic",
                 code: -1,
-                userInfo: [NSLocalizedDescriptionKey: "未获得访问相册的权限，请在系统设置中允许 diypic 访问相册"]
+                userInfo: [NSLocalizedDescriptionKey: "未获得相册访问权限，请在系统「设置 -> diypic -> 照片」中勾选「全部照片」"]
             )
         }
 
         try await PHPhotoLibrary.shared().performChanges {
             PHAssetChangeRequest.creationRequestForAsset(from: image)
+        }
+
+        await MainActor.run {
+            PhotoPermissionManager.shared.checkStatus()
         }
     }
 

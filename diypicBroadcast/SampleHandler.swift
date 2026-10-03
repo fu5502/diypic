@@ -3,6 +3,7 @@ import CoreMedia
 import CoreVideo
 import CoreImage
 import UniformTypeIdentifiers
+import UserNotifications
 
 public class SampleHandler: RPBroadcastSampleHandler {
 
@@ -173,6 +174,22 @@ public class SampleHandler: RPBroadcastSampleHandler {
                 try data.write(to: latestFile, options: .atomic)
             }
 
+            // Send local notification to user
+            let content = UNMutableNotificationContent()
+            content.title = "长截图已生成 ✨"
+            content.body = "录屏已结束，点击立即查看、保存并分享长截图"
+            content.sound = .default
+            content.userInfo = ["sessionId": session.id]
+
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.2, repeats: false)
+            let request = UNNotificationRequest(
+                identifier: "diypic.capture.\(session.id)",
+                content: content,
+                trigger: trigger
+            )
+            UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
+
+            // Post Darwin notification to wake/inform main app
             let notificationName = CFNotificationName("com.fu5502.diypic.newCapture" as CFString)
             CFNotificationCenterPostNotification(
                 CFNotificationCenterGetDarwinNotifyCenter(),
