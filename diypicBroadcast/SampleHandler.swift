@@ -35,6 +35,12 @@ public class SampleHandler: RPBroadcastSampleHandler {
         guard let containerURL = FileManager.default.containerURL(
             forSecurityApplicationGroupIdentifier: appGroupID
         ) else {
+            let error = NSError(
+                domain: "com.fu5502.diypic",
+                code: -1001,
+                userInfo: [NSLocalizedDescriptionKey: "当前自签名未启用 App Group 跨进程权限。请打开 diypic App 使用「相册连续截图拼长图」或「录屏视频转长图」"]
+            )
+            finishBroadcastWithError(error)
             return
         }
 
@@ -159,6 +165,12 @@ public class SampleHandler: RPBroadcastSampleHandler {
         guard let session = currentSession,
               let sessionDir = sessionURL,
               !session.frames.isEmpty else {
+            let error = NSError(
+                domain: "com.fu5502.diypic",
+                code: -1002,
+                userInfo: [NSLocalizedDescriptionKey: "未检测到有效的屏幕滑动切片。请在录制时平稳向下滑动屏幕。"]
+            )
+            finishBroadcastWithError(error)
             return
         }
 

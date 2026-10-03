@@ -6,8 +6,10 @@ public final class SharedDataManager: ObservableObject {
     public static let shared = SharedDataManager()
     public let appGroupID = "group.com.fu5502.diypic"
 
+    @Published public var isAppGroupAvailable: Bool = false
     @Published public var availableSessions: [(session: CaptureSession, dirURL: URL)] = []
     @Published public var latestSession: (session: CaptureSession, dirURL: URL)?
+    @Published public var diagnosticMessage: String = ""
 
     private init() {
         listenForDarwinNotifications()
@@ -19,7 +21,19 @@ public final class SharedDataManager: ObservableObject {
     }
 
     public func reloadSessions() {
-        guard let container = containerURL else { return }
+        guard let container = containerURL else {
+            DispatchQueue.main.async {
+                self.isAppGroupAvailable = false
+                self.diagnosticMessage = "App Group 共享容器未启用（免费自签名不支持跨进程共享）。建议使用相册截图或录屏合成。"
+                self.availableSessions = []
+                self.latestSession = nil
+            }
+            return
+        }
+
+        DispatchQueue.main.async {
+            self.isAppGroupAvailable = true
+        }
 
         let capturesDir = container.appendingPathComponent("Captures", isDirectory: true)
         guard let subdirs = try? FileManager.default.contentsOfDirectory(
@@ -27,6 +41,11 @@ public final class SharedDataManager: ObservableObject {
             includingPropertiesForKeys: [.contentModificationDateKey],
             options: [.skipsHiddenFiles]
         ) else {
+            DispatchQueue.main.async {
+                self.diagnosticMessage = "已连接共享容器，暂无录屏捕获记录。"
+                self.availableSessions = []
+                self.latestSession = nil
+            }
             return
         }
 
@@ -40,12 +59,12 @@ public final class SharedDataManager: ObservableObject {
             }
         }
 
-        // Sort descending by creation time
         results.sort { $0.session.createdAt > $1.session.createdAt }
 
         DispatchQueue.main.async {
             self.availableSessions = results
             self.latestSession = results.first
+            self.diagnosticMessage = "已发现 \(results.count) 条录屏广播记录。"
         }
     }
 
